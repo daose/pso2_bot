@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "pso2_bot",
+    "pso2_scraper"
+]
