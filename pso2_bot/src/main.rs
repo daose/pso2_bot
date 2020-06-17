@@ -90,21 +90,23 @@ fn main() {
     let quests = Arc::clone(&quests);
     let discord_handle = thread::spawn(move || loop {
         info!("Discord thread wake");
-        let mut quests_guard = quests.lock().expect("Quest lock is poisoned");
-        while let Some(quest) = quests_guard.last() {
-            let time_to_event = quest.start_time - Utc::now();
-            info!("Processing quest: {:?}", quest);
-            if time_to_event < chrono::Duration::seconds(0) {
-                // event already happened
-                quests_guard.pop().unwrap();
-                info!("ignored");
-            } else if time_to_event < chrono::Duration::minutes(REMINDER_MINS) {
-                let quest = quests_guard.pop().unwrap();
-                say_discord(&quest);
-                info!("said");
-            } else {
-                info!("deal with later");
-                break;
+        {
+            let mut quests_guard = quests.lock().expect("Quest lock is poisoned");
+            while let Some(quest) = quests_guard.last() {
+                let time_to_event = quest.start_time - Utc::now();
+                info!("Processing quest: {:?}", quest);
+                if time_to_event < chrono::Duration::seconds(0) {
+                    // event already happened
+                    quests_guard.pop().unwrap();
+                    info!("ignored");
+                } else if time_to_event < chrono::Duration::minutes(REMINDER_MINS) {
+                    let quest = quests_guard.pop().unwrap();
+                    say_discord(&quest);
+                    info!("said");
+                } else {
+                    info!("deal with later");
+                    break;
+                }
             }
         }
 
